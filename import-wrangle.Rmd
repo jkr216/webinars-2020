@@ -1,0 +1,267 @@
+---
+title: "HPI Data"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+### What is R and RStudio? 
+
+R is an open-source statistical programming language that is growing very fast in the world of data science. 
+
+To download R, go to: 
+
+https://cloud.r-project.org
+
+and then click on the link for either Mac, Windows or Linux depending on your computer. 
+
+To install RStudio, go to: 
+
+https://rstudio.com/products/rstudio/download/#download
+
+RStudio is an integrated development environment (or IDE) for R programming. It makes writing and running R code more fun. 
+
+
+### Packages
+
+R the programming language consists of base R and the packages that have been built on top of it. Once you have downloaded base R onto your computer and installed RStudio, you need to install the packages we will be using for this workshop.
+
+To install a package on your computer, run `install.packages("name of package")`. To use that package, place `library(name of package)` at the top of your R script or RMarkdown file and run it.
+
+
+### Rmarkdown
+
+The file we are looking at and using today is called an `RMarkdown` file. It's a file format that let's us interweave code chunks that look like this: 
+
+```{r}
+plot(mtcars)
+```
+
+
+Along with plain text prose, which is what we are reading right now. We can then `knit` this to a PDF, an HTML file or a Notebook. We could have used an R script, which would have the file extension `.R`. Click `file` -> `New File` -> `R Script` to open an R script. Click `file` -> `New File` -> `R Notebook` to open an Rmarkdown Notebook.
+
+### Data Science Paradigm
+
+How we think about data science at RStudio?
+
+![](images/tidyverse-paradigm.png)
+
+### Tidy verse and Base R
+
+What is the tidyverse? Where to start? Does it matter?
+
+
+### Learn More
+
+Link to book R for Data Science
+https://r4ds.had.co.nz/
+
+Link to tidyverse
+https://www.tidyverse.org/packages/
+
+Link to lots more of my code and Shiny apps
+
+http://www.reproduciblefinance.com/
+
+### Load the packages
+
+All my R Notebooks start with this step. We need our tools! 
+
+If you are using R for the first time on this computer, you'll need to install all these packages to your machine.
+
+```{r setup, message = FALSE, warning = FALSE}
+# install.packages("readr")
+# install.packages("dplyr")
+# install.packages("ggplot2")
+# install.packages("readxl")
+# install.packages("lubridate")
+
+library(readr)    # tidyverse
+library(dplyr)    # tidyverse
+library(ggplot2)  # tidyverse 
+library(readxl)   # import excel
+library(lubridate) # work with dates
+
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, comment = NA)
+```
+
+
+What we will cover today:
+
+    + import an excel spreadsheet
+    + import a csv file
+    + Remove rows with slice()
+    + Pick columns by their names select()
+    + Pick observations by their values filter()
+    + Create new variables with functions of existing variables mutate()
+    + rename columns with rename()
+    + Create a plot or two
+    
+
+# Import Data
+
+How, why, where did it come from? 
+
+Often this will involve grabbing data from internal databases, or from a repository set up by a vendor, or from someone emailing us excel and csv files.
+
+For today, we will import one local excel file, one local csv file and one internet file.
+
+Before getting to code, click on the file and notice how to use the `Import Dataset` button at the top right. This can be a huge time saver and it generates code for us!
+
+Always, always, paste the full code into the script. Future you will thank past you.
+
+
+### From local csv file: two ways
+
+This is a large file, 13.5 MBs. 
+
+We can use `read_csv()` from `readr`, and need to call `hpi_from_csv <- read_csv("path to your local csv")`.
+
+```{r}
+
+fmhpi_master_file <- read_csv("fmhpi_master_file.csv")
+
+```
+
+
+### From local excel file
+
+We use `read_excel` from the `readxl` package and call `hpi_from_excel <- read_excel("path to your local excel file")`
+
+```{r}
+
+hpi_from_excel <- read_excel("State_and_US_SA.xls")
+
+```
+
+### From the internet
+
+From the internet or from local file, either way, RStudio needs a path to the excel or csv.
+
+```{r}
+# I don't want to memorize this code, and I don't have to do so! Use RStudio's built in button.
+
+url <- "http://www.freddiemac.com/fmac-resources/research/docs/State_and_US_SA.xls"
+destfile <- "State_and_US_SA.xls"
+curl::curl_download(url, destfile)
+
+states_hpi <- read_excel(destfile, skip = 5)
+```
+
+### Data frames and tibbles
+
+What are they? Where did the word `tibble` come from and what does it mean?
+
+```{r}
+states_hpi %>% 
+  class() 
+```
+
+### Wrangle the data
+
+We will hear this referred to as wrangling, munging, cleaning, etc. The work horse package here is `dplyr`.
+
+First, let's take a look at the data.
+
+```{r}
+states_hpi %>% 
+  glimpse() %>% 
+  head()
+
+
+states_hpi %>% 
+  View()
+```
+
+
+what is  a `tibble`? It's really just a data frame. People use these interchangeably.
+
+### What's that weird `%>%`?
+
+This is called the 'pipe' operator. It chains together our functions so we don't have to create new objects each time we do something. It will appear dozens of times today and by the end you'll be tired of seeing it. We can think of this as reading `and then`, it tells the code to keep processing and moving to the next function. 
+
+We think it makes code more readable and logical, and it saves us from having to create new variable at each line.
+
+
+### Wrangle data
+
+Key package is `dplyr`!
+
+We have our data object. Let's: 
+
+1. use `slice()` from `dplyr` to delete or keep or select rows
+2. use `rename()` from `dplyr` to rename a column
+3. use `select()` from `dplyr` to delete and choose columns
+4. use `mutate()` from `dplyr` to create new column
+5. use `summarise()` from `dplyr` to get summary stats
+6. use `filter()` from `dplyr`to select by row values
+
+Choose just the first 100 rows with `slice(1:100)`.
+
+```{r}
+states_hpi %>% 
+  slice(1:100)
+```
+
+Rename the `Month` column to `Date` with `rename(date = Month)`.
+
+```{r}
+states_hpi %>% 
+  slice(1:100) %>% 
+  rename(date = Month)
+```
+
+Choose just a few columns with `select(date, GA, FL, NY)`.
+
+```{r}
+states_hpi %>% 
+  slice(1:100) %>% 
+  rename(date = Month) %>% 
+  select(date, GA, FL, NY)
+```
+
+Add a column that is a function of already existing columns with `mutate()`.
+
+```{r}
+states_hpi %>% 
+  slice(1:100) %>% 
+  rename(date = Month) %>% 
+  select(date, GA, FL, NY) %>% 
+  mutate(sum_of_GA_FL = GA + FL)
+```
+
+Get summary statistics with `summarise()`
+
+```{r}
+states_hpi %>% 
+  slice(1:100) %>% 
+  rename(date = Month) %>% 
+  select(date, GA, FL, NY) %>% 
+  summarise(ga_avg = mean(GA),
+            ga_std_dev = sd(GA))
+  
+```
+
+Choose rows by their values
+
+```{r}
+states_hpi %>% 
+  slice(1:100) %>% 
+  rename(date = Month) %>% 
+  select(date, GA, FL, NY) %>% 
+  filter(date == "1975M09")
+  
+```
+
+Create a quick plot exploring for a relationship between GA and FL. 
+
+```{r}
+states_hpi %>% 
+  slice(1:100) %>% 
+  rename(date = Month) %>% 
+  select(date, GA, FL, NY) %>% 
+  ggplot(aes(x = GA, y = FL)) +
+  geom_line(color = "blue")
+```
